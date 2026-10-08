@@ -631,7 +631,7 @@
         parseFloat(rootStyle.getPropertyValue('--source-caption-fraction')) || .028,
         .022, .04
       );
-      const bannerHeight = Math.max(18, bannerWidth * captionFraction);
+      const bannerHeight = Math.max(18, (bannerWidth - 10) * captionFraction + 8);
       stampBar.style.left = `${bannerLeft}px`;
       stampBar.style.top = `${bannerTop}px`;
       stampBar.style.width = `${bannerWidth}px`;
