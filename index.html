@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NOAA GOES-19 Band 13 v1.00.3 — StoryMap Viewer — Intelligent Floating Overlays — Gray Margins + Governed Lower Controls — Corrected Floating Placement — N11 — Complete NOAA Frame / Width-First StoryMap Scaling</title>
+  <style>
+    :root {
+      /* =========================================================
+         STORYMAP INTEGRATION SETTINGS
+         StoryMaps supplies the top / left / right gray surround.
+         This page supplies ONLY the missing bottom gray border.
+         Tune these two values first during StoryMap testing.
+         ========================================================= */
+      /*
+         StoryMaps owns the outer frame. The NOAA imagery is preserved at
+         its transmitted aspect ratio and is letterboxed with WHITE space.
+      */
+      --bottom-border-thickness: 0px;
+      --storymap-radius: 24px;
+      --safe-inset: 14px;
+      --title-inside-top: 15px;
+      --source-footer-mask-height: 0px;
+      --source-footer-mask-color: #d3d3d3;
+
+      /* NOAA/NESDIS-style presentation margins */
+      --side-gray-margin: 48px;
+
+      /* Governed lower overlay row */
+      --lower-control-height: 45px;
+      --lower-control-inset: 15px;
+      --lower-control-gap-above-band: 12px;
+      --logo-size: 88px;
+
+      /* Compact StoryMap embeds lift the lower row 25 px.
+         As vertical space becomes available, the lift smoothly relaxes to 0. */
+      --compact-control-lift: 25px;
+      --expanded-relax-space: 80px;
+
+      /*
+         Reference geometry for governed responsive presentation.
+         The NOAA image is NEVER stretched; only presentation furniture scales.
+      */
+      --reference-frame-width: 910px;
+      --reference-viewport-width: 1006px;
+      --presentation-min-scale: 0.72;
+      --presentation-max-scale: 1.08;
+      --title-min-scale: 0.88;
+
+      --overlay-motion: 180ms ease;
+
+      /* Preserve the NOAA image at its native aspect ratio at default view. */
+      --default-scale: 1.0;
+
+      /* Overlay styling */
+      --badge-font-size: 10.5px;
+      --badge-radius: 9px;
+      --navy-blue: rgba(7, 37, 94, 0.35);
+      --navy-border: rgba(255,255,255,0.24);
+      --nav-width: 292px;
+
+      /* Fixed NOAA source banner */
+      --banner-top: 15px;
+      --banner-width: 84%;
+      --banner-height: 26px;
+      --banner-vertical-pad: 4px;
+      --banner-shadow-x: 2px;
+      --banner-shadow-y: 3px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      min-height: 100%;
+      background: transparent;
+      overflow-x: hidden;
+      overflow-y: auto;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .page {
+      width: 100%;
+      min-height: 100vh;
+      height: auto;
+      display: block;
+      background: transparent;
+      padding: 0;
+    }
+
+    /*
+       The GitHub page fills the dimensions supplied by StoryMaps.
+       The white viewport behaves like NOAA's own page: the satellite data
+       is never stretched or cropped at the default extent.
+    */
+    .viewer-shell {
+      position: relative;
+      width: 100%;
+      min-height: 100vh;
+      height: auto;
+      max-width: none;
+      background: #d3d3d3;
+      overflow: hidden;
+      border-radius: 0 0 var(--storymap-radius) var(--storymap-radius);
+    }
+
+    .viewport {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #d3d3d3;
+      cursor: default;
+      user-select: none;
+      touch-action: pan-y pinch-zoom;
+      overscroll-behavior: auto;
+      border-radius: 0 0 var(--storymap-radius) var(--storymap-radius);
+    }
+
+    .viewport.dragging { cursor: grabbing; }
+
+    /*
+       image-frame is the exact "contain" rectangle for NOAA's source GIF.
+       White space outside this frame is deliberate letterboxing and remains
+       part of the StoryMap presentation.
+    */
+    .image-frame {
+      position: absolute;
+      overflow: hidden;
+      background: #fff;
+      cursor: grab;
+    }
+
+    .image-frame.dragging { cursor: grabbing; }
+
+    .main-loop {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: center center;
+      transform: translate(-50%, -50%) scale(var(--default-scale));
+      transform-origin: center center;
+      pointer-events: none;
+      display: block;
+    }
+
+    /* The source bottom timestamp is concealed by an overlay, not by cropping
+       or changing the dimensions of the original NOAA animated GIF. */
+    .source-footer-mask {
+      display: none;
+    }
+
+    /* Shared translucent blurred label treatment. */
+    .badge {
+      position: absolute;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 6px 10px;
+      border-radius: var(--badge-radius);
+      font-size: var(--badge-font-size);
+      line-height: 1.1;
+      color: #f7f8fa;
+      background: var(--navy-blue);
+      border: 1px solid var(--navy-border);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow: none;
+      pointer-events: none;
+    }
+
+    .stamp-bar,
+    .nav-badge,
+    .noaa-logo {
+      transition:
+        top var(--overlay-motion),
+        left var(--overlay-motion),
+        width var(--overlay-motion),
+        height var(--overlay-motion),
+        font-size var(--overlay-motion);
+      will-change: top, left, width, height;
+    }
+
+    /* NOAA source banner is a separate crop of the authoritative GIF footer.
+       As an independent GIF element it may not be precisely frame-synchronized. */
+    .stamp-bar {
+      position: absolute;
+      z-index: 12;
+      left: 50%;
+      top: var(--banner-top);
+      width: var(--banner-width);
+      height: var(--banner-height);
+      transform: translateX(-50%);
+      overflow: hidden;
+      background: #fff;
+      pointer-events: none;
+      box-shadow:
+        var(--banner-shadow-x)
+        var(--banner-shadow-y)
+        0 rgba(0, 0, 0, 0.70);
+    }
+
+    /* Inner crop holds ONLY NOAA's animated text strip.
+       The white parent supplies even breathing room above and below. */
+    .stamp-inner {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: var(--banner-vertical-pad);
+      bottom: var(--banner-vertical-pad);
+      overflow: hidden;
+      background: #fff;
+    }
+
+    /* Mask NOAA's black rule above the animated text with white.
+       This changes only the visible title-strip rule; the animated text remains intact. */
+    .stamp-inner::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 2px;
+      background: #fff;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .stamp-gif {
+      position: absolute;
+      width: 133.333333%;
+      height: auto;
+      left: -16.666666%;
+      bottom: -2px;
+      display: block;
+      pointer-events: none;
+    }
+
+    /* Mapping navigation instructions return to the lower left. */
+    .nav-badge {
+      left: var(--safe-inset);
+      top: auto;
+      bottom: auto;
+      width: var(--nav-width);
+      height: var(--lower-control-height);
+      min-height: var(--lower-control-height);
+      justify-content: center;
+      text-align: center;
+      white-space: nowrap;
+      font-weight: 700;
+      font-size: 10.5px;
+      letter-spacing: 0.05px;
+      padding-left: 12px;
+      padding-right: 12px;
+      background: var(--navy-blue);
+      border: 1px solid var(--navy-border);
+    }
+
+    /* NOAA emblem remains lower right, safely above our added bottom border. */
+    .noaa-logo {
+      position: absolute;
+      z-index: 11;
+      left: auto;
+      right: auto;
+      top: auto;
+      bottom: auto;
+      width: var(--logo-size);
+      height: var(--logo-size);
+      object-fit: cover;
+      border-radius: 50%;
+      clip-path: circle(50% at 50% 50%);
+      display: block;
+      pointer-events: none;
+      background: transparent;
+    }
+
+    /* StoryMaps owns the outer frame; do not draw a competing bottom strip. */
+    .storymap-bottom-border {
+      display: none;
+    }
+
+    .status {
+      position: absolute;
+      z-index: 30;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      padding: 7px 10px;
+      border-radius: 7px;
+      background: rgba(0,0,0,0.58);
+      color: #fff;
+      font-size: 12px;
+      pointer-events: none;
+    }
+
+    @media (max-width: 700px) {
+      :root {
+        --bottom-border-thickness: 0px;
+        --storymap-radius: 18px;
+        --safe-inset: 10px;
+        --badge-font-size: 9px;
+        --nav-width: 250px;
+        --side-gray-margin: 24px;
+        --logo-size: 68px;
+        --banner-width: 88%;
+        --banner-height: 22px;
+        --banner-vertical-pad: 3px;
+      }
+    }
+
+    /* v1.00.3: white NOAA footer strip above a flush, full-width blue information bar.
+       These elements are overlays; the NOAA image-frame and transforms are unaltered. */
+    :root { --source-caption-fraction: .028; }
+    .noaa-logo, #noaaLogo { display: none !important; }
+    .stamp-bar {
+      z-index: 16; transform: none; box-shadow: none; border: none;
+      overflow: hidden; background: #fff;
+    }
+    .stamp-inner { inset: 0; background: #fff; overflow: hidden; }
+    .stamp-inner::after { display: none; }
+    .stamp-gif {
+      position: absolute; left: 0; bottom: 0; width: 100%; height: auto;
+      max-width: none; transform: none; object-fit: initial;
+    }
+    .source-footer-mask {
+      display: block; position: absolute; z-index: 5;
+      bottom: 0; left: 0; right: 0;
+      height: calc(100% * var(--source-caption-fraction));
+      background: #fff; pointer-events: none;
+    }
+    .band-info {
+      position: absolute; z-index: 15; display: grid;
+      grid-template-columns: minmax(140px, 19%) minmax(0, 1fr) minmax(180px, 22%);
+      align-items: center; gap: 9px;
+      margin: 0; padding: 5px 9px; min-width: 0;
+      color: #fff; background: rgba(7, 29, 52, .91);
+      border: 1px solid rgba(255,255,255,.25); border-top: none;
+      border-radius: 0 0 6px 6px;
+      box-shadow: none; font: 11px/1.3 Arial, Helvetica, sans-serif;
+      pointer-events: none;
+    }
+    .band-info .band-legend { display:block; width:100%; max-width:303px; height:auto; margin:0; }
+    .band-info .description-area { min-width:0; }
+    .band-info h2 { margin:0 0 2px; font-size: 12px; line-height:1.2; }
+    .band-info p { margin:0; text-align:justify; text-justify:inter-word; hyphens:auto; }
+    .band-info small {
+      display:block; margin-top:3px; font-size:9px; opacity:.9;
+      font-weight:normal; letter-spacing:.05px;
+    }
+    .nav-badge {
+      position:static; display:flex; flex-direction:column; align-items:center;
+      justify-content:center; width:auto; height:auto; min-height:0;
+      margin:0; padding:6px 8px; text-align:center; white-space:normal;
+      font-weight:600; font-size:10.5px; line-height:1.35;
+      border:1px solid rgba(255,255,255,.25); border-radius:6px;
+      background:rgba(45,82,138,.60); backdrop-filter:none;
+      box-shadow:none; transition:none; will-change:auto;
+    }
+    .nav-badge strong { font-size:10.5px; margin-bottom:2px; }
+    @media (max-width: 720px) {
+      .band-info { grid-template-columns: minmax(95px, 22%) minmax(0,1fr); gap:6px; padding:5px 7px; }
+      .nav-badge { grid-column: 1 / -1; flex-direction: row; gap:7px; }
+      .band-info h2 { font-size:10px; }
+      .band-info p { font-size:9px; }
+    }
+    @media (max-width: 420px) {
+      .band-info { grid-template-columns: minmax(0, 1fr); }
+      .band-info .band-legend { max-width:220px; }
+      .nav-badge { flex-wrap:wrap; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="viewer-shell">
+      <div id="viewport" class="viewport">
+        <div id="imageFrame" class="image-frame">
+          <img id="mainLoop" class="main-loop" alt="NOAA GOES-19 Band 13 satellite loop" />
+          <div class="source-footer-mask" aria-hidden="true"></div>
+        </div>
+        <div id="stampBar" class="stamp-bar" aria-label="NOAA exact animated date and product banner">
+          <div id="stampInner" class="stamp-inner">
+            <img id="stampGif" class="stamp-gif" alt="" aria-hidden="true" />
+          </div>
+        </div>
+
+        <div id="noaaLogo" aria-hidden="true" style="display:none"></div>
+        <section id="bandInfo" class="band-info" aria-label="NOAA Band 13 legend, description, and navigation">
+          <img class="band-legend" alt="NOAA Band 13 infrared temperature legend, degrees Celsius" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAS8AAAAxCAIAAAAEF7jQAAAPaklEQVR42u1da0wU1xc/d17Lzu6ysCsvHwgrIQhFEWgqaC3FYGuU1KRtamtMbaOxttovjdH4wfaLqTZpotUaTRVp2rSNtdSqkL5sS7dSlIKPiLoLKC+R1y4sLOyyOzvz/3BhHXdhpVVx9p/7y2Zy586ZO+eeueeecx9zFkmSBAQEBAoAAwAvv/zy4sWLKYr6z6X4fD6Xy+V2u91utz8RAJfLNexyCSMjWgAtgEZ21ALw+IiA4gA0APzYUT2WGMuRImAYRn9DAC6AobGEP9PrpWCIAycLQywMMTDEgpODIXY0Z5gFCUDFQAQDahYiWFCzEMGMJnB6NJ9BEexiW0+ic8iHEO63cP8lSZK8Iws+Dcj050ySQH5VThOCIKCogPxxKYN5CHEpRDUnQ/CvxPIglZrkpf/Gz2SEEKLMYAKEUExMTG1t7ag2xsXFbdq0iabp/6yNHo+np6env7+/r6/Pbrf39fXZbLb+/v7+/n6cwArZa7O5HY7pAJEAeoAEgDiA6QDxY4lpCNhIABZADxAFEAswDSAWIBYgBiAWIA58UdCDoAegB6ALoAegG6AboHdMIbsBhodZuKOBTg108tDFwx1mNDGoAYcWetQgItBFgFENag2o1WDQgFEN0TwYeDDwEK0GowaMPBh4ysCnX68vuNPppmlJBlEU5coghz9HTiOKYgAlzhz3xn9Fgx8kzx/3ccEIIHjwGt33EQE1ClFI6BoFi0WejxAKftB9azQu5bjyH5e3f/uO5OqqVqvv2kaEEEVRD6KN9BgoGRBCCKGAjtbPAgJAANTYEf9oBDQAyCmQjIIePdLo7i34Oowd8d0SLQENQEljJcjKkgAkBJLs+YgChAAoQBQgCigKKBpofKQlmkZjNRpX4iHe9ETWxg+KovytBwMhFJATTIOL8lOKooh58+fjuwIo7/sS5S9rMjQT0eNayNMT5fiPcs5D50+x6ziuKxEiJ0R7CFDg4HIAgCLOOgGBQkC0kYCAaCMBAQHRxrDDRCM0PDIPHqIThCkYIgKF6+HMmTP1en17e7vNZrvnzTFMTExMdHQ0y7KCINjt9vb2dkEQyAIy0UaCR4L58+fn5OT4fL6srKzTp09jhUQIxcXFLV261GAwyIn7+vpOnTrV09NDFJJ4qgQPGRzHJScnd3R0VFRUUBQ1ffp0rIpJSUnFxcVGo9Hvo2J/1WAwrFq1CpMREG0keJgQRVEURZ1OZzQaVSqV1+vFildYWKhWq/H6m8PhuHz5cltbG157jIqKKigoYFmWSI94qgQPE4IgXLhwITc3Nzs722q1trW1AUBqairP81gVW1tby8vLXS4XwzDPPPNMZmbmwMBAf3+/SqXyeDxEgEQbCR4mOjs7KyoqAMDn8/l8PgDwO6KSJNXV1WGt83q9586dq66udrvdgiBgSgKijQQPE5IkCYLg3+KIENLpdPiSx+Nxu93+CZvh4eHgXeYEZNxI8JjeJUU9yIc4BMQ2Evw7uFwunKBpmuM4f77RaCwsLGxsbOzs7Ozq6iLjRmIbCR6549re3j7ajzJMSkoKXuSgKGrBggWJiYmFhYXFxcUB65AExDYSPBJtbGxszM7OjoqKQghlZmYCwO3bt6dNm5aeno6/onK73U6nk8iKaCPBI4fX6/3rr7+WLVvGcRxFUfPnz58/f75fV0VRrKmpGR4eJoIinirBVJjHlpaWysrK3t5eQRD8+aIo9vX1/frrr9euXSNzqsQ2EkwRRFG0WCxtbW1arTY6OjoiIkIQhN7eXofD4XA4iCqGtzaKoigIAkLoQYJxTK19AJ8PiUiSKFkEDmUbNOxGPqzvnkRRdDqdAwMDHR0dwRFrHhbDYafY4d4TUQBw48aNzZs379u3L3yEDh+9E3t4S5zoQ+HSSs6ePfvVV191dXU9IlV/6GXW1NTU1NSEUft2Op0Oh0PuvSscHMfFxcXJJ8AZALDb7a2trWG0QiVJUPcHjxgo9oWHry1JUltbW1NTU15eXrgIubu7O7xMjdfr9Xq9ERER4cIwTdNqtVq+YYOCsbm48BK9JKHw8krCy/EL0x12/w+e6qMGkgEmM9BDIU/vzUKhCNGEBaKge9BEz4LJMU1A8O+UIjiT8WvLQ+mQ8L4QDBxhlRkDy7Icx/lUKlaSWADmbnjUu2FTgQJgx36Ygg4MnCpJgLCCIEQBR4FEAzBjPw5AJSEfMBJwgFigOKBZoBlgGGAZYBngGOBoECngaGApYGhgaGAooCmgcTBVBBQAwg8BCoBCiEJUgIjk4VXlwU4nCrXq/yY4OC5rwKyJP3CofO5n3Li6/kCj941uHBCOddxIuzhwq/yF4om94OCumEZeEXlpkwm1PFGo3+CIwwHyCRHdGG9Lwi1t8vGaJwqRDOMFdA4dGxrGC8EcohyWZf1NYlTgkiS9+OKLLpdLr9fPnTv3wXUydMB2wA0uyBqNHse1VEGZkgQXLtQhBNm52WjMukv3HNG95/JTNL7hu/sU+SlCCKgHdoslSbJYLAMDA2lpaZGRkcr3x0RRrKurkyQpNzd3kj31Y/cSLRbL4OBgamqqTqeTB1NWrFM9ODjY0NCg0+l4nj927NioNnq93hDWU8kjhPAKlCYPuU0kTBiW88wwzKg2TjTlgA2o3NHyT/lgC/t450L8/Pi9FGWKG7srfg6xx6JYhgM4Dxc+5RL2u4jK+b5s3HYrH/XgBP3BBx8E33np0qWrV6+aTCaEkM/n+/777x0Ox4wZMwCgo6Pj8OHDg4ODc+bMmfr3NDg4+Msvv1gsFqvVqlKpVCpVeXn5qVOnYmJijEaj0toNdlBLSkpqa2tTUlI0Go0oij/99NPJkyeTk5PlDpUCm/iVK1dKSkooipoxY4aSP5u02WxHjhyprq7GEsaqWFZW1tfXl5iYqBAmRVGsqKjA7dbj8QwPD5vNZqvVarVaOzo64uPjR0MZBY9iHQ7HsmXLduzY4fP5RFFsbGxMS0vbu3evIAg2my0vL0+r1fI8X1ZWJk05fvzxR41Gw/O8RqMpLS09duyYWq3WarU6na6lpUVSEkRR7O3txaxqNJo1a9YIglBWVsbzvFarzcvLs9lsklLR0tKi0+m0Wm1SUhLe+KpMeDyerVu38jzP8/xLL73k8Xhwi01PT//444+Vw6fVasVao9Fo3n///dLSUtwqVCpVVlZWZ2fnqIsX0CO2tra+9tprZrMZ2/qLFy++/vrrN2/exIbVarXeuHGjrq5u06ZN+/fvHxkZmeI+pr293WQynT59+rffflu6dOnhw4d3797d3NxcWFi4d+9epXXb9fX1q1atun79+nfffVdRUdHW1vbJJ5+sX7++rq6uvb29oaFBsQbnyJEjK1euvHXr1ooVK4aGhhTL5/DwcHt7+7lz586cOVNdXd3W1nb58uV169Y1NTUpav6mq6srISHhm2++OXv27Lp1655//vnff/+9vLx87ty5y5Yt82/HCfRAmpqaEhIS3njjDXxqNpszMzPT09Nh7OuBp556ymQyPfvss06nc3BwcIprZTabPR7P2bNnu7q69Hp9fX19WlpaVFRUfn5+bW2t2+1WVFvJz88/evTo9OnTjUYjwzADAwNOp7OoqMhkMmVmZjY3Nytzxs/r9VZVVaWmpp4/f/7dd9/NyspSrDbqdLpjx45lZGQ0NzfzPB8dHW02m+fNm/cgqwOPAteuXcOtt6GhISYmJjY2Njc3V6fTcRy3fft2f8TNe/aVIYTy8/MXLly4e/duvFFu7dq1CKHi4mI8wnG73fhOiqJ8Pp/X653KeUJBEIaGhmiabmhoKC0tPXDgwJNPPmk2m9PS0qqqqgRBUNQeRTxRhpXw008/XbJkidFoFEURb82naVppfYcfIyMjLpfrhx9++Pnnn2/fvn3q1Cn/J5RKA0VRLMseP358w4YNO3fu1Ol0a9as4Thu+fLlShvcCoLQ0tJy4sSJgYGBt956CwCOHj36wgsvyFe8KADo7u4uKipKTk7es2cPXqP3XzYYDI/9H1f++OMPk8mUlJRUVVV16NChysrKkpKSDRs2lJeXv/POO5999tmiRYsuXbqkkH+GEUVxz549ycnJRUVF3d3dbrd769atZrN5x44dYTT5jhBKTU09c+ZMTk7On3/+OZk/Y32MrBYVFZWVlX3xxRednZ3R0dEKZPLtt9+urq4uKSnZuXPnoUOHvF6vw+E4efLk0qVL5TNkDO5gZs2aBQA4vkMI90mj0djtdgDAEXU5jpuCFqZSqVJSUkRRZFnW4/HgIXt8fLzFYiksLPz888/7+/tra2v/+ecfeT/yGBtHVFRUSkrKrFmzEEJff/11ZWXlrl27MjMzHQ4HwzA4TMbQ0BCeAFQgWJZlGCYrK0uv16empvb29ip2Dd3r9dpstsjIyOzs7MjIyKtXr86cOVOBE9R4SV+tVsfFxfX09IiieOnSJYPBkJCQINcgBhvAffv24eYeQrsQQrNnz25oaLhz587ff/+t0Wi0Wu0UVCYnJ+fbb7/FVVq/fv2CBQu2b99eU1OTlpb24YcfxsbGbty4sbS0dOXKlUqIeI8QWrt27erVqxFCdrv9vffeW7t2bUZGxs2bNxMSEjQazfnz5/Py8q5fvz579mxlWkuVSrVw4cLKysrNmzc3NTUVFBQo1qoPDg6uWLFi3759kZGRDocjNjZWgUwKgrBlyxZBEEpKSq5cuYLlWV9fr9frAzZmjdpGf8zc0DCZTAUFBYsXL+Y47qOPPlKpVFNQGY7jsNETRXHRokUHDx6sqKjo7+8/fvy4xWLZuHHjyZMnKYpavXq1QqTP8zx+BwcPHnQ4HPv37z9w4ABN0zdu3NiyZcu2bdtOnDjx9NNPm0wmxbp/b7755quvvrpkyRKPx7Nr1y7Frjfq9frly5evX79ekqQlS5bMmzdPmb7GK6+8sm3btueee85qtX755ZcURZ07dw4vctzTlQc7IZIk3blzRxTFGTNmIIQEQWhsbIyOjo6NjZUkyW63V1VVJSYmZmRkTL0tcrvd9fX1t27dysrKSkpK8nq9Fy9etNvtOTk5cXFximo0eAra7+bhEG8URdXX17e2tubn5xsMBsW2clEUm5ubr1y58sQTTyQlJeF9WwqEJElOp7OmpmZkZGThwoV4qOXz+RoaGqKiouLj45XjUVutVovFkpycnJGRwTBMU1MTAMyZM0feBtB/GBI83v2WwdsRw2v/ZxgxHEZ8QjjsUL2vPJFEghoRECgDJIIjAQHRRgICAqKNBAREGwkICIg2EhAQbSQgIJg8/gcPtO7VZXv8tQAAAABJRU5ErkJggg==">
+          <div class="description-area">
+            <h2>GOES-19 Band 13: Clean Longwave Infrared (10.3 µm)</h2>
+            <p>Thermal infrared imagery supports day-and-night monitoring of cloud-top temperatures, cloud development, and storm structure, and helps estimate cloud-top heights.</p>
+            <small>Imagery and temperature legend: NOAA / NESDIS / STAR</small>
+          </div>
+          <div id="navBadge" class="nav-badge" aria-label="Navigation instructions">
+            <strong>Navigation Instructions</strong>
+            <span id="navText">Wheel: Zoom • Drag: Pan • Double-click: Reset</span>
+          </div>
+        </section>
+
+        <div class="storymap-bottom-border" aria-hidden="true"></div>
+        <div id="status" class="status">Loading NOAA loop…</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================
+       REUSABLE FEED CONFIGURATION
+       Copy this page for EPA, radar, or other satellite feeds.
+       ========================================================== */
+    const CONFIG = {
+      sourceUrl: 'https://cdn.star.nesdis.noaa.gov/GOES19/ABI/SECTOR/eus/13/GOES19-EUS-13-1000x1000.gif',
+      refreshMs: 5 * 60 * 1000,
+      defaultScale: 1.0,
+      minScale: 1.0,
+      maxScale: 3.0,
+      zoomFactor: 1.12
+    };
+
+    const viewport = document.getElementById('viewport');
+    const imageFrame = document.getElementById('imageFrame');
+    const mainLoop = document.getElementById('mainLoop');
+    const stampBar = document.getElementById('stampBar');
+    const stampInner = document.getElementById('stampInner');
+    const stampGif = document.getElementById('stampGif');
+    const navBadge = document.getElementById('navBadge');
+    const navText = document.getElementById('navText');
+    const noaaLogo = document.getElementById('noaaLogo');
+    const status = document.getElementById('status');
+    const bandInfo = document.getElementById('bandInfo');
+
+    const IS_EMBEDDED = window.self !== window.top;
+
+    if (IS_EMBEDDED) {
+      navText.textContent = 'Ctrl + Wheel: Zoom • Drag: Pan • Double-click: Reset';
+    }
+
+    let imageBounds = { left: 0, top: 0, width: 1, height: 1 };
+    let scale = CONFIG.defaultScale;
+    let panX = 0;
+    let panY = 0;
+    let dragging = false;
+    let startX = 0;
+    let startY = 0;
+    let startPanX = 0;
+    let startPanY = 0;
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function getSourceAspect() {
+      if (mainLoop.naturalWidth > 0 && mainLoop.naturalHeight > 0) {
+        return mainLoop.naturalWidth / mainLoop.naturalHeight;
+      }
+      return 1;
+    }
+
+    function layoutViewer() {
+      const rect = viewport.getBoundingClientRect();
+      const vw = Math.max(1, rect.width);
+      const hostHeight = Math.max(1, window.innerHeight);
+      const aspect = getSourceAspect();
+
+      /*
+         IMPORTANT:
+         Read every governed CSS value BEFORE using it for geometry.
+         The prior trial referenced sideGrayMargin before it existed,
+         which stopped layoutViewer() and left the floating items at
+         their fallback positions near the top of the page.
+      */
+      const rootStyle = getComputedStyle(document.documentElement);
+
+      const safe = parseFloat(
+        rootStyle.getPropertyValue('--safe-inset')
+      ) || 14;
+
+      const titleInsideTop = parseFloat(
+        rootStyle.getPropertyValue('--title-inside-top')
+      ) || 15;
+
+      const sourceFooterMaskHeight = parseFloat(
+        rootStyle.getPropertyValue('--source-footer-mask-height')
+      ) || 0;
+
+      const lowerControlHeight = parseFloat(
+        rootStyle.getPropertyValue('--lower-control-height')
+      ) || 45;
+
+      const lowerControlInset = parseFloat(
+        rootStyle.getPropertyValue('--lower-control-inset')
+      ) || 15;
+
+      const sideGrayMargin = parseFloat(
+        rootStyle.getPropertyValue('--side-gray-margin')
+      ) || 48;
+
+      const lowerControlGap = parseFloat(
+        rootStyle.getPropertyValue('--lower-control-gap-above-band')
+      ) || 12;
+
+      const compactControlLift = parseFloat(
+        rootStyle.getPropertyValue('--compact-control-lift')
+      ) || 25;
+
+      const expandedRelaxSpaceRef = parseFloat(
+        rootStyle.getPropertyValue('--expanded-relax-space')
+      ) || 80;
+
+      const referenceFrameWidth = parseFloat(
+        rootStyle.getPropertyValue('--reference-frame-width')
+      ) || 910;
+
+      const referenceViewportWidth = parseFloat(
+        rootStyle.getPropertyValue('--reference-viewport-width')
+      ) || 1006;
+
+      const presentationMinScale = parseFloat(
+        rootStyle.getPropertyValue('--presentation-min-scale')
+      ) || 0.72;
+
+      const presentationMaxScale = parseFloat(
+        rootStyle.getPropertyValue('--presentation-max-scale')
+      ) || 1.08;
+
+      const titleMinScale = parseFloat(
+        rootStyle.getPropertyValue('--title-min-scale')
+      ) || 0.88;
+
+      let frameWidth;
+      let frameHeight;
+
+      /*
+         Reserve explicit gray margins at left and right, like the NOAA/NESDIS
+         presentation page. The satellite image itself is never stretched.
+      */
+      /*
+         Scale the presentation margins with the available StoryMap width.
+         This changes only the gray presentation furniture, never NOAA pixels.
+      */
+      const viewportScale = clamp(
+        vw / referenceViewportWidth,
+        presentationMinScale,
+        presentationMaxScale
+      );
+
+      const scaledSideGrayMargin = sideGrayMargin * viewportScale;
+      const availableWidth = Math.max(1, vw - (scaledSideGrayMargin * 2));
+
+      frameWidth = availableWidth;
+      frameHeight = frameWidth / aspect;
+
+      /*
+         NOAA-MATCHING BEHAVIOR:
+         Fit by WIDTH only. Do not shrink the square NOAA frame just because
+         StoryMaps supplied a shorter iframe. If necessary the iframe page
+         scrolls vertically, just like NOAA's native web insert.
+      */
+      const frameLeft = (vw - frameWidth) / 2;
+      const frameTop = 0;
+
+      const layoutHeight = Math.max(hostHeight, frameHeight);
+      viewport.style.height = `${layoutHeight}px`;
+      const vh = layoutHeight;
+
+      imageBounds = {
+        left: frameLeft,
+        top: frameTop,
+        width: frameWidth,
+        height: frameHeight
+      };
+
+      imageFrame.style.left = `${frameLeft}px`;
+      imageFrame.style.top = `${frameTop}px`;
+      imageFrame.style.width = `${frameWidth}px`;
+      imageFrame.style.height = `${frameHeight}px`;
+
+      /*
+         PRESENTATION SCALE
+         The NOAA frame remains aspect-correct. These values scale only the
+         title, gray mask, instructions, logo, insets and motion distances.
+      */
+      const uiScale = clamp(
+        frameWidth / referenceFrameWidth,
+        presentationMinScale,
+        presentationMaxScale
+      );
+
+      /* Keep the time/title more readable than the rest of the UI when compact. */
+      const titleScale = clamp(
+        uiScale,
+        titleMinScale,
+        presentationMaxScale
+      );
+
+      const scaledSafe = safe * uiScale;
+      const scaledTitleInsideTop = titleInsideTop * titleScale;
+      const scaledSourceFooterMaskHeight = sourceFooterMaskHeight * uiScale;
+      const scaledLowerControlHeight = lowerControlHeight * uiScale;
+      const scaledLowerControlInset = lowerControlInset * uiScale;
+      const scaledLowerControlGap = lowerControlGap * uiScale;
+      const scaledLogoSize = 88 * uiScale;
+      const scaledCompactControlLift = compactControlLift * uiScale;
+      const scaledExpandedRelaxSpace = expandedRelaxSpaceRef * uiScale;
+      const scaledNavWidth = 292 * uiScale;
+      const scaledNavFont = 10.5 * clamp(uiScale, 0.82, 1.05);
+      const scaledBadgeRadius = 9 * uiScale;
+
+      /* v1.00.3: Only the overlay geometry changes. The imageBounds,
+         imageFrame positioning, and satellite transforms above/below are intact. */
+      const bannerLeft = frameLeft;
+      const bannerTop = frameTop + Math.max(4, 7 * uiScale);
+      const bannerWidth = frameWidth;
+      /* Source is a 1000px-wide NOAA GIF. Crop the entire original footer at
+         native proportions, not the oversized 133% GIF used in v1.00.2. */
+      const captionFraction = clamp(
+        parseFloat(rootStyle.getPropertyValue('--source-caption-fraction')) || .028,
+        .022, .04
+      );
+      const bannerHeight = Math.max(18, bannerWidth * captionFraction);
+      stampBar.style.left = `${bannerLeft}px`;
+      stampBar.style.top = `${bannerTop}px`;
+      stampBar.style.width = `${bannerWidth}px`;
+      stampBar.style.height = `${bannerHeight}px`;
+      stampInner.style.top = '0px';
+      stampInner.style.bottom = '0px';
+      stampInner.style.left = '0px';
+      stampInner.style.right = '0px';
+
+      bandInfo.style.left = `${bannerLeft}px`;
+      bandInfo.style.top = `${bannerTop + bannerHeight}px`;
+      bandInfo.style.width = `${bannerWidth}px`;
+      bandInfo.style.fontSize = `${11 * clamp(uiScale, .8, 1.05)}px`;
+      bandInfo.style.padding = `${Math.max(4,5*uiScale)}px ${Math.max(6,9*uiScale)}px`;
+      navBadge.style.fontSize = `${10.5 * clamp(uiScale, .82, 1.05)}px`;
+
+      applyTransform();
+    }
+
+    function getPanLimits(forScale = scale) {
+      const safetyPx = 2;
+      const maxPanX = Math.max(
+        0,
+        ((imageBounds.width * (forScale - 1)) / 2) - safetyPx
+      );
+      const maxPanY = Math.max(
+        0,
+        ((imageBounds.height * (forScale - 1)) / 2) - safetyPx
+      );
+      return { maxPanX, maxPanY };
+    }
+
+    function applyTransform() {
+      const { maxPanX, maxPanY } = getPanLimits();
+      panX = clamp(panX, -maxPanX, maxPanX);
+      panY = clamp(panY, -maxPanY, maxPanY);
+
+      mainLoop.style.transform =
+        `translate(calc(-50% + ${panX}px), calc(-50% + ${panY}px)) scale(${scale})`;
+    }
+
+    function resetView() {
+      scale = CONFIG.defaultScale;
+      panX = 0;
+      panY = 0;
+      layoutViewer();
+    }
+
+    function zoomAt(clientX, clientY, direction) {
+      const rect = imageFrame.getBoundingClientRect();
+      const cx = clientX - rect.left - rect.width / 2;
+      const cy = clientY - rect.top - rect.height / 2;
+      const oldScale = scale;
+      const candidate = direction > 0 ? scale * CONFIG.zoomFactor : scale / CONFIG.zoomFactor;
+      const newScale = clamp(candidate, CONFIG.minScale, CONFIG.maxScale);
+      if (newScale === oldScale) return;
+
+      const factor = newScale / oldScale;
+      panX = cx - (cx - panX) * factor;
+      panY = cy - (cy - panY) * factor;
+      scale = newScale;
+      applyTransform();
+    }
+
+    function pointInsideImageFrame(clientX, clientY) {
+      const r = imageFrame.getBoundingClientRect();
+      return (
+        clientX >= r.left &&
+        clientX <= r.right &&
+        clientY >= r.top &&
+        clientY <= r.bottom
+      );
+    }
+
+    viewport.addEventListener('wheel', (event) => {
+      if (!pointInsideImageFrame(event.clientX, event.clientY)) return;
+
+      /*
+         StoryMap-safe:
+         regular wheel remains page scrolling when embedded.
+         Ctrl/Command + wheel controls satellite zoom.
+      */
+      if (IS_EMBEDDED && !(event.ctrlKey || event.metaKey)) return;
+
+      event.preventDefault();
+      zoomAt(event.clientX, event.clientY, event.deltaY < 0 ? 1 : -1);
+    }, { passive: false });
+
+    viewport.addEventListener('pointerdown', (event) => {
+      if (!pointInsideImageFrame(event.clientX, event.clientY)) return;
+      if (IS_EMBEDDED && event.pointerType === 'touch') return;
+      if (event.button !== undefined && event.button !== 0) return;
+
+      dragging = true;
+      viewport.classList.add('dragging');
+      imageFrame.classList.add('dragging');
+
+      startX = event.clientX;
+      startY = event.clientY;
+      startPanX = panX;
+      startPanY = panY;
+
+      viewport.setPointerCapture(event.pointerId);
+    });
+
+    viewport.addEventListener('pointermove', (event) => {
+      if (!dragging) return;
+      panX = startPanX + (event.clientX - startX);
+      panY = startPanY + (event.clientY - startY);
+      applyTransform();
+    });
+
+    function endDrag(event) {
+      dragging = false;
+      viewport.classList.remove('dragging');
+      imageFrame.classList.remove('dragging');
+      try { viewport.releasePointerCapture(event.pointerId); } catch (_) {}
+    }
+
+    viewport.addEventListener('pointerup', endDrag);
+    viewport.addEventListener('pointercancel', endDrag);
+
+    viewport.addEventListener('dblclick', (event) => {
+      if (!pointInsideImageFrame(event.clientX, event.clientY)) return;
+      event.preventDefault();
+      resetView();
+    });
+
+    const resizeObserver = new ResizeObserver(() => {
+      layoutViewer();
+    });
+
+    resizeObserver.observe(viewport);
+    window.addEventListener('resize', layoutViewer);
+
+    function loadLoop() {
+      const cacheBust = `?cb=${Date.now()}`;
+      const synchronizedUrl = CONFIG.sourceUrl + cacheBust;
+      mainLoop.src = synchronizedUrl;
+      stampGif.src = synchronizedUrl;
+      status.style.display = 'block';
+      status.textContent = 'Loading NOAA loop…';
+    }
+
+    mainLoop.addEventListener('load', () => {
+      status.style.display = 'none';
+      layoutViewer();
+    });
+    mainLoop.addEventListener('error', () => {
+      status.style.display = 'block';
+      status.textContent = 'NOAA loop could not be loaded.';
+    });
+
+    stampGif.addEventListener('error', () => {
+      /* Keep the map usable even if NOAA's banner copy fails independently. */
+    });
+
+    layoutViewer();
+    loadLoop();
+    setInterval(loadLoop, CONFIG.refreshMs);
+  </script>
+</body>
+</html>
