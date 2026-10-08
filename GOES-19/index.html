@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>NOAA GOES-19 Band 13 v1.00.3 — StoryMap Viewer — Intelligent Floating Overlays — Gray Margins + Governed Lower Controls — Corrected Floating Placement — N11 — Complete NOAA Frame / Width-First StoryMap Scaling</title>
+  <title>NOAA GOES-19 Band 13 v1.00.4 — StoryMap Viewer — Intelligent Floating Overlays — Gray Margins + Governed Lower Controls — Corrected Floating Placement — N11 — Complete NOAA Frame / Width-First StoryMap Scaling</title>
   <style>
     :root {
       /* =========================================================
@@ -313,73 +313,222 @@
       }
     }
 
-    /* v1.00.3: white NOAA footer strip above a flush, full-width blue information bar.
-       These elements are overlays; the NOAA image-frame and transforms are unaltered. */
-    :root { --source-caption-fraction: .028; }
+    /* v1.00.4: governed presentation layers. Image sizing and pan/zoom untouched.
+       NESDIS alignment is approximate because NOAA words are raster pixels in a GIF.
+       Adjust --nesdis-edge-fraction against the actual published GIF if needed. */
+    :root {
+      --nesdis-edge-fraction: .54;
+      --source-caption-fraction: .028;
+      --panel-gap: 7px;
+    }
     .noaa-logo, #noaaLogo { display: none !important; }
-    .stamp-bar {
-    z-index: 16;
-    transform: none;
-    box-shadow: none;
-    border: none;
-    overflow: hidden;
-    background: #071d34;
-    }
-    .stamp-inner {
-    inset: 4px 5px 4px 5px;
-    background: #fff;
-    overflow: hidden;
-    }
-    .stamp-inner::after { display: none; }
-    .stamp-gif {
-      position: absolute; left: 0; bottom: 0; width: 100%; height: auto;
-      max-width: none; transform: none; object-fit: initial;
-    }
+    .stamp-bar { z-index: 16; box-shadow: none; }
+    .stamp-inner { background: #fff; }
     .source-footer-mask {
-      display: block; position: absolute; z-index: 5;
-      bottom: 0; left: 0; right: 0;
-      height: max(0px, calc(100% * var(--source-caption-fraction) - 9px));
-      background: #fff; pointer-events: none;
-    }
-    .band-info {
-      position: absolute; z-index: 15; display: grid;
-      grid-template-columns: minmax(140px, 19%) minmax(0, 1fr) minmax(180px, 22%);
-      align-items: center; gap: 9px;
-      margin: 0; padding: 5px 9px; min-width: 0;
-      color: #fff; background: rgba(7, 29, 52, .91);
-      border: 1px solid rgba(255,255,255,.25); border-top: none;
-      border-radius: 0 0 6px 6px;
-      box-shadow: none; font: 11px/1.3 Arial, Helvetica, sans-serif;
+      display: block;
+      position: absolute;
+      z-index: 5;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: calc(100% * var(--source-caption-fraction));
+      background: #fff;
       pointer-events: none;
     }
-    .band-info .band-legend { display:block; width:100%; max-width:303px; height:auto; margin:0; }
-    .band-info .description-area { min-width:0; }
-    .band-info h2 { margin:0 0 2px; font-size: 12px; line-height:1.2; }
-    .band-info p { margin:0; text-align:justify; text-justify:inter-word; hyphens:auto; }
-    .band-info small {
-      display:block; margin-top:3px; font-size:9px; opacity:.9;
-      font-weight:normal; letter-spacing:.05px;
+    .band-info {
+      position: absolute;
+      z-index: 15;
+      width: 340px;
+      max-width: none;
+      padding: 8px 10px;
+      color: #f8fafc;
+      background: rgba(7,29,52,.84);
+      border: 1px solid rgba(255,255,255,.34);
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.22);
+      font: 11px/1.3 Arial, Helvetica, sans-serif;
+      pointer-events: none;
     }
+    .band-info h2 { margin: 0 0 4px; font-size: 12px; line-height: 1.2; }
+    .band-info .band-legend {
+      width: min(303px,100%);
+      height: auto;
+      display: block;
+      margin: 0 0 5px;
+    }
+    .band-info p { margin: 0; text-align: justify; text-justify: inter-word; hyphens: auto; }
+    .band-info small { display: block; margin-top: 4px; opacity: .9; }
     .nav-badge {
-      position:static; display:flex; flex-direction:column; align-items:center;
-      justify-content:center; width:auto; height:auto; min-height:0;
-      margin:0; padding:6px 8px; text-align:center; white-space:normal;
-      font-weight:600; font-size:10.5px; line-height:1.35;
-      border:1px solid rgba(255,255,255,.25); border-radius:6px;
-      background:rgba(45,82,138,.60); backdrop-filter:none;
-      box-shadow:none; transition:none; will-change:auto;
+      z-index: 16;
+      justify-content: center;
+      background: rgba(7,37,94,.7);
+      white-space: normal;
+      line-height: 1.2;
     }
-    .nav-badge strong { font-size:10.5px; margin-bottom:2px; }
-    @media (max-width: 720px) {
-      .band-info { grid-template-columns: minmax(95px, 22%) minmax(0,1fr); gap:6px; padding:5px 7px; }
-      .nav-badge { grid-column: 1 / -1; flex-direction: row; gap:7px; }
-      .band-info h2 { font-size:10px; }
-      .band-info p { font-size:9px; }
+    @media (max-width: 540px) {
+      .band-info { padding: 6px 8px; font-size: 9px; }
+      .band-info h2 { font-size: 10px; }
     }
-    @media (max-width: 420px) {
-      .band-info { grid-template-columns: minmax(0, 1fr); }
-      .band-info .band-legend { max-width:220px; }
-      .nav-badge { flex-wrap:wrap; }
+
+    /* v1.00.4: contiguous NOAA caption and blue information bar.
+       Native GOES image dimensions, feed, handlers and framing are unchanged. */
+    :root {
+      --caption-text-rows: 19px; /* crop only the bottom NOAA footer lettering */
+      --footer-mask-source-height: 28px; /* NOAA footer in 1000px source GIF */
+      --emblem-protect-center-x: 42px; /* center of NOAA roundel in source GIF pixels */
+      --emblem-protect-center-y: 948px;
+      --emblem-protect-radius: 30px; /* roundel radius; existing JS adds 2px safety */
+    }
+    /* v1.00.4 approved frame: blue enclosure around NOAA's original GIF caption. */
+    .stamp-bar {
+      overflow: hidden;
+      border-radius: 0;
+      box-shadow: none !important;
+      background: #071d34;
+    }
+    .stamp-inner {
+      top: 8px !important;
+      bottom: 8px !important;
+      left: 16px !important;
+      right: 16px !important;
+      height: auto !important;
+      overflow: hidden;
+      background: #fff;
+    }
+    .stamp-inner::after { display:none !important; }
+    /* Display NOAA's raster timestamp at the original image-frame scale.
+       Only the footer is revealed by the inner crop; the satellite is unchanged. */
+    .stamp-gif {
+      left: -16px !important;
+      bottom: 0 !important;
+      width: calc(100% + 32px) !important;
+      height: auto !important;
+      max-width: none;
+      transform: none !important;
+    }
+    .band-info {
+      display:grid; grid-template-columns:minmax(135px, 25%) minmax(0, 1fr) minmax(165px, 23%);
+      align-items:center; gap:9px; border-radius:0; padding:5px 10px;
+      background:#071d34;
+      border:solid #071d34;
+      border-width:0 16px 8px 16px;
+      box-shadow:none; max-width:none;
+    }
+    .band-info .legend-col { min-width:0; }
+    .band-info .description-col { min-width:0; }
+    .band-info .nav-col { min-width:0; text-align:center; border-left:1px solid rgba(255,255,255,.3); padding-left:8px; }
+    .band-info h2 { font-size:12px; margin:0 0 12px; }
+    .band-info p { text-align:justify; line-height:1.2; }
+    .band-info .band-legend { width:100%; margin:0; height:auto; }
+    .band-info small { margin-top:2px; font-size:9px; opacity:.84; }
+    .band-info .nav-label { font-weight:700; margin-bottom:3px; }
+    .nav-badge { display:none !important; }
+    /* Exact vector footer: a full-width white field with an even-odd
+       circular opening around the NOAA roundel. No radial-gradient fuzz,
+       rectangular gray patch, or change to satellite raster pixels. */
+    .source-footer-mask {
+      display: block;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 0;
+      overflow: visible;
+      pointer-events: none;
+      z-index: 5;
+      background: transparent;
+      -webkit-mask-image: none;
+      mask-image: none;
+    }
+    .source-footer-mask path {
+      fill: #fff;
+      fill-rule: evenodd;
+    }
+    /* Bottom-only foreground: clip to the NOAA roundel, not the surrounding raster.
+       This leaves one straight white footer edge on both sides of the emblem. */
+    .emblem-foreground {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      object-position: center;
+      pointer-events: none;
+      z-index: 6;
+      display: block;
+      clip-path: circle(var(--emblem-foreground-radius, 0px) at var(--emblem-foreground-x, 0px) var(--emblem-foreground-y, 0px));
+    }
+    @media(max-width:720px) {
+      .band-info {grid-template-columns:minmax(90px,27%) minmax(0,1fr);gap:5px;padding:5px;}
+      .band-info .nav-col {grid-column:1/-1;border-left:0;border-top:1px solid rgba(255,255,255,.2);padding:3px 0 0;}
+      .band-info h2 {font-size:10px;}
+      .band-info p {font-size:9px;}
+    }
+
+
+    /* v1.00.7: one genuinely continuous navy enclosure. */
+    .header-frame {
+      position: absolute;
+      z-index: 16;
+      background: #071d34;
+      padding: 8px 26px 8px 26px;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .header-frame .stamp-bar {
+      position: relative;
+      flex: none;
+      left: auto !important;
+      top: auto !important;
+      transform: none !important;
+      width: 100% !important;
+      background: white;
+      z-index: auto;
+    }
+    .header-frame .stamp-inner {
+      inset: 0 !important;
+      height: 100% !important;
+      width: auto !important;
+      background: white;
+    }
+    /* v1.00.10: continuous 26px side rails meet the legend's cut edge.
+       This replaces the visibly separate 16px lighter-blue strip. */
+    .header-frame {
+      background: #071d34;
+    }
+    .header-frame .band-info {
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+    }
+    /* v1.00.8: NOAA's source GIF contains image pixels directly above its
+       timestamp. Cover only those extra top rows inside the already-approved
+       white strip; never alter the source GIF, frame, or timestamp scaling. */
+    .header-frame .stamp-inner::after {
+      content: "";
+      display: block !important;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 11px;
+      background: #fff;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .header-frame .band-info {
+      position: relative;
+      left: auto !important;
+      top: auto !important;
+      width: 100% !important;
+      flex: none;
+      border: none !important;
+      margin: 0;
+      z-index: auto;
+      background: #071d34;
     }
   </style>
 </head>
@@ -389,27 +538,36 @@
       <div id="viewport" class="viewport">
         <div id="imageFrame" class="image-frame">
           <img id="mainLoop" class="main-loop" alt="NOAA GOES-19 Band 13 satellite loop" />
-          <div class="source-footer-mask" aria-hidden="true"></div>
+          <svg id="footerVectorMask" class="source-footer-mask" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path id="footerVectorPath" fill-rule="evenodd"></path></svg>
+          <img id="emblemForeground" class="emblem-foreground" alt="" aria-hidden="true" />
         </div>
+        <div id="headerFrame" class="header-frame" aria-label="NOAA header and information frame">
         <div id="stampBar" class="stamp-bar" aria-label="NOAA exact animated date and product banner">
           <div id="stampInner" class="stamp-inner">
             <img id="stampGif" class="stamp-gif" alt="" aria-hidden="true" />
           </div>
         </div>
 
+        <div id="navBadge" class="badge nav-badge" aria-label="Map navigation instructions">
+          Wheel: zoom • Drag: pan • Double-click: reset
+        </div>
         <div id="noaaLogo" aria-hidden="true" style="display:none"></div>
-        <section id="bandInfo" class="band-info" aria-label="NOAA Band 13 legend, description, and navigation">
-          <img class="band-legend" alt="NOAA Band 13 infrared temperature legend, degrees Celsius" src="data:image/png;base64,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">
-          <div class="description-area">
-            <h2>GOES-19 Band 13: Clean Longwave Infrared (10.3 µm)</h2>
-            <p>Thermal infrared imagery supports day-and-night monitoring of cloud-top temperatures, cloud development, and storm structure, and helps estimate cloud-top heights.</p>
-            <small>Imagery and temperature legend: NOAA / NESDIS / STAR</small>
+
+
+        <section id="bandInfo" class="band-info" aria-label="NOAA Band 13 legend and description">
+          <div class="legend-col">
+          <img class="band-legend" alt="NOAA Band 13 infrared temperature legend, degrees Celsius" src="data:image/png;base64,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">
           </div>
-          <div id="navBadge" class="nav-badge" aria-label="Navigation instructions">
-            <strong>Navigation Instructions</strong>
-            <span id="navText">Wheel: Zoom • Drag: Pan • Double-click: Reset</span>
+          <div class="description-col">
+          <h2>GOES-19 Band 13: Clean Longwave Infrared (10.3 µm)</h2>
+          <p>Band 13 measures thermal infrared radiation through a relatively clean atmosphere window. Meteorologists use it to monitor cloud top temperatures, cloud-<br>development, and storm structure during both day and night to support estimates of cloud top height. (Imagery: NOAA / NESDIS / STAR - Temperature legend: NOAA)</p>
+          </div>
+          <div class="nav-col" aria-label="Navigation Instructions">
+            <div class="nav-label">Navigation Instructions</div>
+            <div id="headerNavText">Wheel: Zoom • Drag: Pan • Double-click: Reset</div>
           </div>
         </section>
+        </div><!-- /headerFrame -->
 
         <div class="storymap-bottom-border" aria-hidden="true"></div>
         <div id="status" class="status">Loading NOAA loop…</div>
@@ -434,11 +592,14 @@
     const viewport = document.getElementById('viewport');
     const imageFrame = document.getElementById('imageFrame');
     const mainLoop = document.getElementById('mainLoop');
+    const emblemForeground = document.getElementById('emblemForeground');
+    const footerVectorMask = document.getElementById('footerVectorMask');
+    const footerVectorPath = document.getElementById('footerVectorPath');
+    const headerFrame = document.getElementById('headerFrame');
     const stampBar = document.getElementById('stampBar');
     const stampInner = document.getElementById('stampInner');
     const stampGif = document.getElementById('stampGif');
     const navBadge = document.getElementById('navBadge');
-    const navText = document.getElementById('navText');
     const noaaLogo = document.getElementById('noaaLogo');
     const status = document.getElementById('status');
     const bandInfo = document.getElementById('bandInfo');
@@ -446,7 +607,7 @@
     const IS_EMBEDDED = window.self !== window.top;
 
     if (IS_EMBEDDED) {
-      navText.textContent = 'Ctrl + Wheel: Zoom • Drag: Pan • Double-click: Reset';
+      navBadge.textContent = 'Ctrl + wheel: zoom • Drag: pan • Double-click: reset';
     }
 
     let imageBounds = { left: 0, top: 0, width: 1, height: 1 };
@@ -620,31 +781,62 @@
       const scaledNavFont = 10.5 * clamp(uiScale, 0.82, 1.05);
       const scaledBadgeRadius = 9 * uiScale;
 
-      /* v1.00.3: Only the overlay geometry changes. The imageBounds,
-         imageFrame positioning, and satellite transforms above/below are intact. */
+      /* NOAA footer stays proportional to the original 1000px GIF.
+         Add 4px above and below for the governed opaque navy enclosure. */
       const bannerLeft = frameLeft;
-      const bannerTop = frameTop + Math.max(4, 7 * uiScale);
+      /* Place the top edge flush with the NOAA frame: no transparent strip above. */
+      const bannerTop = frameTop;
       const bannerWidth = frameWidth;
-      /* Source is a 1000px-wide NOAA GIF. Crop the entire original footer at
-         native proportions, not the oversized 133% GIF used in v1.00.2. */
       const captionFraction = clamp(
         parseFloat(rootStyle.getPropertyValue('--source-caption-fraction')) || .028,
         .022, .04
       );
-      const bannerHeight = Math.max(18, (bannerWidth - 10) * captionFraction + 8);
-      stampBar.style.left = `${bannerLeft}px`;
-      stampBar.style.top = `${bannerTop}px`;
-      stampBar.style.width = `${bannerWidth}px`;
+      /* NOAA caption height is unchanged. Add matching 8px navy rails top/bottom. */
+      /* Retain the restored NOAA white strip. The frame supplies the rails. */
+      const bannerHeight = Math.max(22, bannerWidth * captionFraction);
+      headerFrame.style.left = `${bannerLeft}px`;
+      headerFrame.style.top = `${bannerTop}px`;
+      headerFrame.style.width = `${bannerWidth}px`;
       stampBar.style.height = `${bannerHeight}px`;
-      // Respect the governed 4px/5px CSS inset for the navy frame.
-      // Do not assign inline stampInner edge styles here.
-
-      bandInfo.style.left = `${bannerLeft}px`;
-      bandInfo.style.top = `${bannerTop + bannerHeight}px`;
-      bandInfo.style.width = `${bannerWidth}px`;
       bandInfo.style.fontSize = `${11 * clamp(uiScale, .8, 1.05)}px`;
-      bandInfo.style.padding = `${Math.max(4,5*uiScale)}px ${Math.max(6,9*uiScale)}px`;
-      navBadge.style.fontSize = `${10.5 * clamp(uiScale, .82, 1.05)}px`;
+      const headerNavText = document.getElementById('headerNavText');
+      headerNavText.textContent = IS_EMBEDDED
+        ? 'Ctrl + Wheel: Zoom • Drag: Pan • Double-click: Reset'
+        : 'Wheel: Zoom • Drag: Pan • Double-click: Reset';
+      /* Bottom-only boundary. A straight mask covers the raster footer, while
+         the emblem foreground extends across it without any white cutout notch. */
+      const sourceWidth = mainLoop.naturalWidth || 1000;
+      const sourceHeight = mainLoop.naturalHeight || 1000;
+      const maskSourceHeight = parseFloat(rootStyle.getPropertyValue('--footer-mask-source-height')) || 28;
+      const protectX = parseFloat(rootStyle.getPropertyValue('--emblem-protect-center-x')) || 52;
+      const protectY = parseFloat(rootStyle.getPropertyValue('--emblem-protect-center-y')) || 972;
+      const protectRadius = (parseFloat(rootStyle.getPropertyValue('--emblem-protect-radius')) || 42) + 2;
+      const footerHeight = Math.max(0, frameHeight * maskSourceHeight / sourceHeight - 3);
+      const emblemX = protectX / sourceWidth * frameWidth;
+      const emblemY = protectY / sourceHeight * frameHeight;
+      // Tighten the visible roundel edge instead of widening or offsetting the cutout.
+      // The former 2px guard enlarged the circle into NOAA's pale raster pixels.
+      const emblemRadius = (protectRadius - 2) / sourceWidth * frameWidth;
+      const footerTop = frameHeight - footerHeight;
+      // SVG coordinate system is local to the rectangular footer band.
+      // The second closed subpath is an exact circle, excluded by evenodd.
+      const circleY = emblemY - footerTop;
+      const leftX = emblemX - emblemRadius;
+      const rightX = emblemX + emblemRadius;
+      const r = emblemRadius;
+      const vectorPath = [
+        `M 0 0 H ${frameWidth} V ${footerHeight} H 0 Z`,
+        `M ${leftX} ${circleY}`,
+        `A ${r} ${r} 0 1 0 ${rightX} ${circleY}`,
+        `A ${r} ${r} 0 1 0 ${leftX} ${circleY} Z`
+      ].join(' ');
+      footerVectorMask.style.height = `${footerHeight}px`;
+      footerVectorMask.setAttribute('viewBox', `0 0 ${frameWidth} ${Math.max(footerHeight, 0.001)}`);
+      footerVectorPath.setAttribute('d', vectorPath);
+      emblemForeground.style.setProperty('--emblem-foreground-x', `${emblemX}px`);
+      emblemForeground.style.setProperty('--emblem-foreground-y', `${emblemY}px`);
+      // Exact concentric match: no extra white raster fragments in the foreground.
+      emblemForeground.style.setProperty('--emblem-foreground-radius', `${emblemRadius}px`);
 
       applyTransform();
     }
@@ -669,6 +861,10 @@
 
       mainLoop.style.transform =
         `translate(calc(-50% + ${panX}px), calc(-50% + ${panY}px)) scale(${scale})`;
+      /* At zoom, expose the native full GIF rather than keeping a fixed footer. */
+      const atDefaultView = Math.abs(scale - 1) < 0.00001;
+      document.querySelector('.source-footer-mask').style.display = atDefaultView ? 'block' : 'none';
+      emblemForeground.style.display = atDefaultView ? 'block' : 'none';
     }
 
     function resetView() {
@@ -769,6 +965,7 @@
       const cacheBust = `?cb=${Date.now()}`;
       const synchronizedUrl = CONFIG.sourceUrl + cacheBust;
       mainLoop.src = synchronizedUrl;
+      emblemForeground.src = synchronizedUrl;
       stampGif.src = synchronizedUrl;
       status.style.display = 'block';
       status.textContent = 'Loading NOAA loop…';
