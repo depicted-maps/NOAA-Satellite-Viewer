@@ -338,7 +338,7 @@
     .source-footer-mask {
       display: block; position: absolute; z-index: 5;
       bottom: 0; left: 0; right: 0;
-      height: calc(100% * var(--source-caption-fraction minus 6px));
+      height: max(0px, calc(100% * var(--source-caption-fraction) - 9px));
       background: #fff; pointer-events: none;
     }
     .band-info {
@@ -636,10 +636,8 @@
       stampBar.style.top = `${bannerTop}px`;
       stampBar.style.width = `${bannerWidth}px`;
       stampBar.style.height = `${bannerHeight}px`;
-      stampInner.style.top = '0px';
-      stampInner.style.bottom = '0px';
-      stampInner.style.left = '0px';
-      stampInner.style.right = '0px';
+      // Respect the governed 4px/5px CSS inset for the navy frame.
+      // Do not assign inline stampInner edge styles here.
 
       bandInfo.style.left = `${bannerLeft}px`;
       bandInfo.style.top = `${bannerTop + bannerHeight}px`;
