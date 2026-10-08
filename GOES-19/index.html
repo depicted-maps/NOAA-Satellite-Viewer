@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>NOAA GOES-19 Band 13 v1.00.1 — StoryMap Viewer — Intelligent Floating Overlays — Gray Margins + Governed Lower Controls — Corrected Floating Placement — N11 — Complete NOAA Frame / Width-First StoryMap Scaling</title>
+  <title>NOAA GOES-19 Band 13 v1.00.2 — StoryMap Viewer — Intelligent Floating Overlays — Gray Margins + Governed Lower Controls — Corrected Floating Placement — N11 — Complete NOAA Frame / Width-First StoryMap Scaling</title>
   <style>
     :root {
       /* =========================================================
@@ -313,15 +313,23 @@
       }
     }
 
-    /* v1.00.3: white NOAA footer strip above a flush, full-width blue information bar.
+    /* v1.00.2: white NOAA footer strip above a flush, full-width blue information bar.
        These elements are overlays; the NOAA image-frame and transforms are unaltered. */
     :root { --source-caption-fraction: .028; }
     .noaa-logo, #noaaLogo { display: none !important; }
     .stamp-bar {
-      z-index: 16; transform: none; box-shadow: none; border: none;
-      overflow: hidden; background: #fff;
+    z-index: 16;
+    transform: none;
+    box-shadow: none;
+    border: none;
+    overflow: hidden;
+    background: #071d34;
     }
-    .stamp-inner { inset: 0; background: #fff; overflow: hidden; }
+    .stamp-inner {
+    inset: 4px 5px 0 5px;
+    background: #fff;
+    overflow: hidden;
+    }
     .stamp-inner::after { display: none; }
     .stamp-gif {
       position: absolute; left: 0; bottom: 0; width: 100%; height: auto;
@@ -330,7 +338,7 @@
     .source-footer-mask {
       display: block; position: absolute; z-index: 5;
       bottom: 0; left: 0; right: 0;
-      height: calc(100% * var(--source-caption-fraction));
+      height: calc(100% * var(--source-caption-fraction minus 4px));
       background: #fff; pointer-events: none;
     }
     .band-info {
