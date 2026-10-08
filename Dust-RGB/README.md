@@ -42,7 +42,7 @@ https://depicted-maps.github.io/NOAA-Satellite-Viewer/
 
 The planned GOES-19 viewer address is:
 
-https://depicted-maps.github.io/NOAA-Satellite-Viewer/GOES-19/
+https://depicted-maps.github.io/NOAA-Satellite-Viewer/Dust-RGB/
 
 These addresses will become available when the corresponding files are deployed through GitHub Pages.
 
