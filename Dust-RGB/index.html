@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>NOAA GOES-19 Dust RGB Mobile v1.00.10 — StoryMap Viewer — Intelligent Floating Overlays — Gray Margins + Governed Lower Controls — Corrected Floating Placement — N11 — Complete NOAA Frame / Width-First StoryMap Scaling</title>
+  <title>NOAA GOES-19 Dust RGB Mobile v1.00.3 — StoryMap Viewer — Intelligent Floating Overlays — Gray Margins + Governed Lower Controls — Corrected Floating Placement — N11 — Complete NOAA Frame / Width-First StoryMap Scaling</title>
   <style>
     :root {
       /* =========================================================
@@ -313,7 +313,7 @@
       }
     }
 
-    /* v1.00.4: governed presentation layers. Image sizing and pan/zoom untouched.
+    /* v1.00.3: governed presentation layers. Image sizing and pan/zoom untouched.
        NESDIS alignment is approximate because NOAA words are raster pixels in a GIF.
        Adjust --nesdis-edge-fraction against the actual published GIF if needed. */
     :root {
@@ -370,7 +370,7 @@
       .band-info h2 { font-size: 10px; }
     }
 
-    /* v1.00.4: contiguous NOAA caption and blue information bar.
+    /* v1.00.3: contiguous NOAA caption and blue information bar.
        Native GOES image dimensions, feed, handlers and framing are unchanged. */
     :root {
       --caption-text-rows: 19px; /* crop only the bottom NOAA footer lettering */
@@ -379,7 +379,7 @@
       --emblem-protect-center-y: 948px;
       --emblem-protect-radius: 30px; /* roundel radius; existing JS adds 2px safety */
     }
-    /* v1.00.4 approved frame: blue enclosure around NOAA's original GIF caption. */
+    /* v1.00.3 approved frame: blue enclosure around NOAA's original GIF caption. */
     .stamp-bar {
       overflow: hidden;
       border-radius: 0;
@@ -467,7 +467,7 @@
     }
 
 
-    /* v1.00.10: one genuinely continuous navy enclosure. */
+    /* v1.00.3: one genuinely continuous navy enclosure. */
     .header-frame {
       position: absolute;
       z-index: 16;
@@ -495,7 +495,7 @@
       width: auto !important;
       background: white;
     }
-    /* v1.00.10: continuous 26px side rails meet the legend's cut edge.
+    /* v1.00.3: continuous 26px side rails meet the legend's cut edge.
        This replaces the visibly separate 16px lighter-blue strip. */
     .header-frame {
       background: #071d34;
@@ -504,7 +504,7 @@
       padding-left: 0 !important;
       padding-right: 0 !important;
     }
-    /* v1.00.10: NOAA's source GIF contains image pixels directly above its
+    /* v1.00.3: NOAA's source GIF contains image pixels directly above its
        timestamp. Cover only those extra top rows inside the already-approved
        white strip; never alter the source GIF, frame, or timestamp scaling. */
     .header-frame .stamp-inner::after {
@@ -532,7 +532,7 @@
     }
 
     /* Dust RGB identification legend; illustrative swatches, not a calibrated scale. */
-    /* v1.00.2: five Dust RGB identifiers arranged as 3 left + 2 right.
+    /* v1.00.3: five Dust RGB identifiers arranged as 3 left + 2 right.
        Legend occupies slightly more width; imagery and controls are untouched. */
     .header-frame .band-info {grid-template-columns:minmax(0,34%) minmax(0,43%) minmax(0,23%)}
     .dust-legend {
@@ -549,13 +549,14 @@
     .dust-legend>div {display:flex;align-items:flex-start;gap:5px;min-width:0}
     .dust-legend i {flex:0 0 13px;height:9px;margin-top:1px;display:block;border:1px solid rgba(255,255,255,.6)}
     .dust-legend span {display:block;min-width:0}
+    .dust-legend .legend-blank {visibility:hidden}
     @media(max-width:720px) {
       .header-frame .band-info {grid-template-columns:minmax(0,38%) minmax(0,62%)}
       .dust-legend {column-gap:5px;font-size:8px}
       .dust-legend i {flex-basis:10px}
     }
 
-    /* v1.00.4 desktop: reclaim unused space between legend and description.
+    /* v1.00.3 desktop: reclaim unused space between legend and description.
        Move descriptive material left ~25px without reducing font size. */
     @media (min-width: 721px) {
       .header-frame .band-info {
@@ -629,7 +630,7 @@
   .status {z-index:31;}
 }
 
-/* v1.00.10: same NOAA product wording on laptop and mobile. */
+/* v1.00.3: same NOAA product wording on laptop and mobile. */
 .header-frame .band-info .description-col .dust-caveat,
 .header-frame .band-info .description-col .dust-credit,
 .header-frame .band-info .description-col .dust-explanation {margin:0;}
@@ -646,7 +647,7 @@
   .header-frame .band-info .dust-explanation {margin-top:1.4em !important;}
 }
 
-/* v1.00.10: mobile Dust RGB content reordered under the loop. */
+/* v1.00.3: mobile Dust RGB content reordered under the loop. */
 .mobile-band-info {display:none;}
 .mobile-band-info .mobile-section {color:#fff; font-size:13px; line-height:1.42;}
 .mobile-band-info .mobile-nav-label,
@@ -659,7 +660,16 @@
 }
 .mobile-band-info .dust-legend {font-size:12px !important; gap:8px 10px !important;}
 .mobile-band-info .dust-legend div {display:flex; align-items:center; gap:8px;}
-.mobile-band-info .dust-legend i {flex:0 0 auto;}
+.mobile-band-info .dust-legend i {
+  flex:0 0 0.9em !important;
+  width:0.9em !important;
+  height:0.9em !important;
+  box-sizing:border-box;
+  margin-top:0 !important;
+  align-self:center;
+}
+/* One text-line of breathing room after the credit, mobile only. */
+.mobile-band-info .mobile-credit {margin-bottom:1.42em;}
 @media (max-width:720px) {
   .header-frame .band-info {display:block !important; padding:12px 14px 14px !important;}
   .header-frame .band-info > .legend-col,
@@ -672,7 +682,7 @@
 }
 
 
-/* v1.00.10: Desktop credit/caution flow as a continuous sentence, with
+/* v1.00.3: Desktop credit/caution flow as a continuous sentence, with
    quarter-inch clearance before the navigation-column divider. */
 @media (min-width:721px) {
   .header-frame .band-info .description-col {padding-right:24px !important;}
@@ -685,6 +695,39 @@
     text-align:left;
   }
 }
+
+/* Governed mobile-only color key: clear squares and comfortable row spacing. */
+@media (max-width:720px) {
+  .mobile-band-info .mobile-credit {margin-bottom:20px !important;}
+  .mobile-band-info .dust-legend {
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+    grid-template-rows:repeat(3,auto) !important;
+    grid-auto-flow:column !important;
+    column-gap:12px !important;
+    row-gap:13px !important;
+    font-size:12px !important;
+    line-height:1.35 !important;
+  }
+  .mobile-band-info .dust-legend > div {display:flex;align-items:flex-start;gap:7px;min-width:0;}
+  .mobile-band-info .dust-legend > div > i {
+    display:block !important;
+    flex:0 0 12px !important;
+    inline-size:12px !important;
+    block-size:12px !important;
+    min-inline-size:12px !important;
+    min-block-size:12px !important;
+    max-inline-size:12px !important;
+    max-block-size:12px !important;
+    aspect-ratio:1 / 1;
+    border:1px solid rgba(255,255,255,.7) !important;
+    box-sizing:border-box !important;
+    margin:1px 0 0 !important;
+    padding:0 !important;
+    align-self:flex-start;
+  }
+  .mobile-band-info .dust-legend > div > span {line-height:1.35;}
+}
+
 </style>
 </head>
 <body>
@@ -720,11 +763,12 @@
             <div class="mobile-section mobile-credit">Imagery &amp; Color Key: NOAA/NESDIS/STAR</div>
             <div class="mobile-section mobile-legend">
               <div class="dust-legend" aria-label="NOAA Dust RGB identification guide">
-                <div><i style="background:#e64ac5"></i><span>Dust plume (day): pink / magenta</span></div>
-                <div><i style="background:#7a4f9c"></i><span>Dust plume (night): purple</span></div>
-                <div><i style="background:#ccabd8"></i><span>Low water cloud: light purple</span></div>
-                <div><i style="background:#c9b08c"></i><span>Thick mid-cloud: tan</span></div>
-                <div><i style="background:#75ae85"></i><span>Thin mid-cloud: green</span></div>
+                <div><i style="background:#e64ac5"></i><span>Dust Plume (Day): Pink / Magenta</span></div>
+                <div><i style="background:#ccabd8"></i><span>Low Water Cloud: Light Purple</span></div>
+                <div><i style="background:#7a4f9c"></i><span>Dust Plume (Night): Purple</span></div>
+                <div class="legend-blank" aria-hidden="true"><span>&nbsp;</span></div>
+                <div><i style="background:#c9b08c"></i><span>Thick Mid-Cloud: Tan</span></div>
+                <div><i style="background:#75ae85"></i><span>Thin Mid-Cloud: Green</span></div>
               </div>
             </div>
             <div class="mobile-separator" aria-hidden="true"></div>
@@ -734,12 +778,13 @@
           </div>
           <div class="legend-col">
           <div class="dust-legend" aria-label="NOAA Dust RGB identification guide">
-              <div><i style="background:#e64ac5"></i><span>Dust plume (day): pink / magenta</span></div>
-              <div><i style="background:#7a4f9c"></i><span>Dust plume (night): purple</span></div>
-              <div><i style="background:#ccabd8"></i><span>Low water cloud: light purple</span></div>
-              <div><i style="background:#c9b08c"></i><span>Thick mid-cloud: tan</span></div>
-              <div><i style="background:#75ae85"></i><span>Thin mid-cloud: green</span></div>
-            </div>
+                <div><i style="background:#e64ac5"></i><span>Dust Plume (Day): Pink / Magenta</span></div>
+                <div><i style="background:#ccabd8"></i><span>Low Water Cloud: Light Purple</span></div>
+                <div><i style="background:#7a4f9c"></i><span>Dust Plume (Night): Purple</span></div>
+                <div class="legend-blank" aria-hidden="true"><span>&nbsp;</span></div>
+                <div><i style="background:#c9b08c"></i><span>Thick Mid-Cloud: Tan</span></div>
+                <div><i style="background:#75ae85"></i><span>Thin Mid-Cloud: Green</span></div>
+              </div>
           </div>
           <div class="description-col">
           <h2>GOES-19 Dust-RGB: Eastern U.S. (6 Hr Loop)</h2>
