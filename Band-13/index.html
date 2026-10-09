@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>NOAA GOES-19 Band 13 v1.00.7 — StoryMap Viewer — Intelligent Floating Overlays — Gray Margins + Governed Lower Controls — Corrected Floating Placement — N11 — Complete NOAA Frame / Width-First StoryMap Scaling</title>
+  <title>NOAA GOES-19 Band 13 v1.00.3 — StoryMap Viewer — Intelligent Floating Overlays — Gray Margins + Governed Lower Controls — Corrected Floating Placement — N11 — Complete NOAA Frame / Width-First StoryMap Scaling</title>
   <style>
     :root {
       /* =========================================================
@@ -313,7 +313,7 @@
       }
     }
 
-    /* v1.00.0: governed presentation layers. Image sizing and pan/zoom untouched.
+    /* v1.00.3: governed presentation layers. Image sizing and pan/zoom untouched.
        NESDIS alignment is approximate because NOAA words are raster pixels in a GIF.
        Adjust --nesdis-edge-fraction against the actual published GIF if needed. */
     :root {
@@ -370,7 +370,7 @@
       .band-info h2 { font-size: 10px; }
     }
 
-    /* v1.00.0: contiguous NOAA caption and blue information bar.
+    /* v1.00.3: contiguous NOAA caption and blue information bar.
        Native GOES image dimensions, feed, handlers and framing are unchanged. */
     :root {
       --caption-text-rows: 19px; /* crop only the bottom NOAA footer lettering */
@@ -379,7 +379,7 @@
       --emblem-protect-center-y: 948px;
       --emblem-protect-radius: 30px; /* roundel radius; existing JS adds 2px safety */
     }
-    /* v1.00.0 approved frame: blue enclosure around NOAA's original GIF caption. */
+    /* v1.00.3 approved frame: blue enclosure around NOAA's original GIF caption. */
     .stamp-bar {
       overflow: hidden;
       border-radius: 0;
@@ -534,7 +534,7 @@
       width: auto !important;
       background: white;
     }
-    /* v1.00.0: continuous 26px side rails meet the legend's cut edge.
+    /* v1.00.3: continuous 26px side rails meet the legend's cut edge.
        This replaces the visibly separate 16px lighter-blue strip. */
     .header-frame {
       background: #071d34;
@@ -543,7 +543,7 @@
       padding-left: 0 !important;
       padding-right: 0 !important;
     }
-    /* v1.00.8: NOAA's source GIF contains image pixels directly above its
+    /* v1.00.3: NOAA's source GIF contains image pixels directly above its
        timestamp. Cover only those extra top rows inside the already-approved
        white strip; never alter the source GIF, frame, or timestamp scaling. */
     .header-frame .stamp-inner::after {
@@ -607,7 +607,7 @@
   .status {z-index:31;}
 }
 
-/* v1.00.7 — mobile-only refinements, laptop intentionally unaffected. */
+/* v1.00.3 — mobile-only refinements, laptop intentionally unaffected. */
 .mobile-time-banner {display:none;}
 @media (max-width:720px) {
   .mobile-time-banner {
@@ -639,7 +639,7 @@
     .header-frame .band-info .band-desktop-description {margin:0;line-height:1.2;}
   }
   
-/* v1.00.7: desktop-only precise legend sizing and right-anchored navigation. */
+/* v1.00.3: desktop-only precise legend sizing and right-anchored navigation. */
 @media (min-width:721px) {
   .header-frame .band-info .legend-stack {
     max-width:100%;
@@ -711,7 +711,7 @@
             </div>
             <div class="mobile-separator" aria-hidden="true"></div>
             <div class="mobile-section mobile-description">
-Use Band-13 to monitor cloud top temperatures, cloud development, and storm structure to support estimates of cloud top height.
+Use Band-13 to monitor cloud top temperatures, development, and storm structure to estimate storm strngth by cloud top height.
             </div>
           </div>
 
@@ -723,7 +723,7 @@ Use Band-13 to monitor cloud top temperatures, cloud development, and storm stru
           </div>
           <div class="description-col">
           <h2>Band 13: Clean Longwave Infrared (10.3 µm)</h2>
-          <p class="band-desktop-description">Use Band-13 to monitor cloud top temperatures, cloud development, and storm structure to support estimates of cloud top height.</p>
+          <p class="band-desktop-description">Use Band-13 to monitor cloud top temperatures, development, and storm structure to estimate storm strngth by cloud top height.</p>
           </div>
           <div class="nav-col" aria-label="Navigation Instructions">
             <div class="nav-label">Navigation Instructions</div>
